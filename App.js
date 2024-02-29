@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { initializeApp } from 'firebase/app';
+import { getDatabase, push, ref, onValue } from 'firebase/database';
 import {
   StyleSheet,
   Text,
@@ -7,9 +9,21 @@ import {
   Button,
   FlatList,
 } from "react-native";
-import * as SQLite from "expo-sqlite";
+ 
 
-const db = SQLite.openDatabase("coursedb.db");
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDym0vaqhc9KiFabjLslyCHa89hnvVT4NE",
+  authDomain: "ostoslista2-752cc.firebaseapp.com",
+  projectId: "ostoslista2-752cc",
+  storageBucket: "ostoslista2-752cc.appspot.com",
+  messagingSenderId: "56792106804",
+  appId: "1:56792106804:web:29c5c1a3036bd8cd414761"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
 
 export default function App() {
   const [amount, setAmount] = useState("");
@@ -17,71 +31,24 @@ export default function App() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(
-          "create table if not exists items (id integer primary key not null, amount int, product text);"
-        );
-      },
-      null,
-      updateList
-    );
+    onValue(ref(database, 'items/'), snapshot => {
+      console.log(snapshot.val());
+      const data = snapshot.val();
+      setItems(Object.values(data));
+    })
   }, []);
 
   const saveItem = () => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql("insert into items (amount, product) values (?, ?);", [
-          parseInt(amount),
-          product,
-        ]);
-      },
-      null,
-      updateList
-    );
+    push(ref(database, 'items/'), { product, amount})
   };
 
-  const updateList = () => {
-    db.transaction((tx) => {
-      tx.executeSql("select * from items;", [], (_, { rows }) =>
-        setItems(rows._array)
-      );
-    });
-  };
-
-  const deleteItem = (id) => {
-    db.transaction(
-      (tx) => {
-        tx.executeSql(`delete from items where id = ?;`, [id]);
-      },
-      null,
-      updateList
-    );
-  };
-
-  const listSeparator = () => {
-    return (
-      <View
-        style={{
-          height: 5,
-          width: "80%",
-          backgroundColor: "#fff",
-          marginLeft: "10%",
-        }}
-      />
-    );
-  };
 
   return (
     <View style={styles.container}>
       <TextInput
-        placeholder="Title"
+        placeholder="Product"
         style={{
           marginTop: 30,
-          fontSize: 18,
-          width: 200,
-          borderColor: "gray",
-          borderWidth: 1,
         }}
         onChangeText={(product) => setProduct(product)}
         value={product}
@@ -89,38 +56,17 @@ export default function App() {
       <TextInput
         placeholder="Amount"
         keyboardType="numeric"
-        style={{
-          marginTop: 5,
-          marginBottom: 5,
-          fontSize: 18,
-          width: 200,
-          borderColor: "gray",
-          borderWidth: 1,
-        }}
+        style={{ marginTop: 10 }}
         onChangeText={(amount) => setAmount(amount)}
         value={amount}
       />
       <Button onPress={saveItem} title="Save" />
       <Text style={{ marginTop: 30, fontSize: 20 }}>Shopping List</Text>
       <FlatList
-        style={{ marginLeft: "5%" }}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <View style={styles.listcontainer}>
-            <Text style={{ fontSize: 18 }}>
-              {item.product}, {item.amount}
-            </Text>
-            <Text
-              style={{ fontSize: 18, color: "#0000ff" }}
-              onPress={() => deleteItem(item.id)}
-            >
-              {" "}
-              bought
-            </Text>
-          </View>
-        )}
         data={items}
-        ItemSeparatorComponent={listSeparator}
+        renderItem={({ item }) => (
+          <Text>{`${item.product}, ${item.amount}`}</Text>
+        )}
       />
     </View>
   );
@@ -140,3 +86,4 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
 });
+
