@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { initializeApp } from 'firebase/app';
-import { getDatabase, push, ref, onValue } from 'firebase/database';
+import { initializeApp } from "firebase/app";
+import { getDatabase, push, ref, onValue, remove } from "firebase/database";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,6 @@ import {
   Button,
   FlatList,
 } from "react-native";
- 
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -18,7 +17,7 @@ const firebaseConfig = {
   projectId: "ostoslista2-752cc",
   storageBucket: "ostoslista2-752cc.appspot.com",
   messagingSenderId: "56792106804",
-  appId: "1:56792106804:web:29c5c1a3036bd8cd414761"
+  appId: "1:56792106804:web:29c5c1a3036bd8cd414761",
 };
 
 // Initialize Firebase
@@ -31,32 +30,37 @@ export default function App() {
   const [items, setItems] = useState([]);
 
   useEffect(() => {
-    onValue(ref(database, 'items/'), snapshot => {
-      console.log(snapshot.val());
-      const data = snapshot.val();
-      setItems(Object.values(data));
-    })
+    onValue(ref(database, "items/"), (snapshot) => {
+      const shoppinglist = [];
+      snapshot.forEach((s) => {
+        shoppinglist.push(Object.assign({id:s.key, ...s.val()}))
+      });
+      setItems(shoppinglist)
+    });
   }, []);
 
   const saveItem = () => {
-    push(ref(database, 'items/'), { product, amount})
+    push(ref(database, "items/"), { product, amount });
   };
 
+  const deleteItem = (id) => {
+    const itemRef = ref(database, `items/${id}`);
+    remove(itemRef);
+  };
+
+  console.log(items);
 
   return (
     <View style={styles.container}>
       <TextInput
+        style={styles.input}
         placeholder="Product"
-        style={{
-          marginTop: 30,
-        }}
         onChangeText={(product) => setProduct(product)}
         value={product}
       />
       <TextInput
+        style={styles.input}
         placeholder="Amount"
-        keyboardType="numeric"
-        style={{ marginTop: 10 }}
         onChangeText={(amount) => setAmount(amount)}
         value={amount}
       />
@@ -65,7 +69,10 @@ export default function App() {
       <FlatList
         data={items}
         renderItem={({ item }) => (
-          <Text>{`${item.product}, ${item.amount}`}</Text>
+          <View style={styles.listcontainer} key={item.id}>
+            <Text>{`${item.product}, ${item.amount}`}</Text>
+            <Button title="Delete" onPress={() => deleteItem(item.id)} />
+          </View>
         )}
       />
     </View>
@@ -85,5 +92,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
   },
+  input: {
+    marginTop: 10,
+    padding: 20,
+    height: 20,
+    fontSize: 20,
+    borderColor: "black",
+    borderWidth: 1,
+  },
 });
-
