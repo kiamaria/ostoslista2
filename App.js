@@ -3,8 +3,6 @@ import { initializeApp } from "firebase/app";
 import { getDatabase, push, ref, onValue, remove } from "firebase/database";
 import {
   StyleSheet,
-  Text,
-  TextInput,
   View,
   FlatList,
 } from "react-native";
@@ -48,15 +46,18 @@ export default function App() {
     remove(itemRef);
   };
 
-  console.log(items);
-
   return (
     <View style={styles.container}>
       <Header
         backgroundColor="#FFC0CB"
         centerComponent={{
           text: "SHOPPING LIST",
-          style: { color: "#FFF", padding: 10 },
+          style: {
+            color: "#FFF",
+            padding: 10,
+            fontSize: 24,
+            fontWeight: "bold",
+          },
         }}
       />
       <Input
@@ -64,6 +65,7 @@ export default function App() {
         label="PRODUCT"
         onChangeText={(product) => setProduct(product)}
         value={product}
+        containerStyle={{ marginTop: 20 }}
       />
       <Input
         placeholder="Amount"
@@ -78,24 +80,25 @@ export default function App() {
         title="SAVE"
         buttonStyle={{ backgroundColor: "#FFC0CB" }}
       />
-      <Text style={{ marginTop: 30, fontSize: 20 }}>Shopping List</Text>
       <FlatList
+        style={styles.list}
         data={items}
+        keyExtractor={(item, index) => index.toString()}
         renderItem={({ item }) => (
           <ListItem bottomDivider>
             <ListItem.Content>
-              <ListItem.Title>${item.product}</ListItem.Title>
-              <ListItem.Subtitle>${item.amount}</ListItem.Subtitle>
-              <Icon
-                type="material"
-                reverseColor="red"
-                name="delete"
-                onPress={() => deleteItem(item.id)}
-              />
+              <ListItem.Title>
+                {item.product}
+              </ListItem.Title>
+              <ListItem.Subtitle>Amount: {item.amount}</ListItem.Subtitle>
             </ListItem.Content>
+            <Icon
+              name="delete"
+              color="red"
+              onPress={() => deleteItem(item.id)}
+            />
           </ListItem>
         )}
-        keyExtractor={(item, index) => index.toString()}
       />
     </View>
   );
@@ -106,13 +109,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#fff",
     alignItems: "center",
-    justifyContent: "center",
     paddingTop: 50,
   },
-  listcontainer: {
-    flexDirection: "row",
-    backgroundColor: "#fff",
-    alignItems: "center",
+  list: {
+    width: "100%",
   },
 });
 
