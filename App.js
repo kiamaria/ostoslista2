@@ -6,9 +6,9 @@ import {
   Text,
   TextInput,
   View,
-  Button,
   FlatList,
 } from "react-native";
+import { Header, Input, Button, ListItem, Icon } from "@rneui/themed";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -33,9 +33,9 @@ export default function App() {
     onValue(ref(database, "items/"), (snapshot) => {
       const shoppinglist = [];
       snapshot.forEach((s) => {
-        shoppinglist.push(Object.assign({id:s.key, ...s.val()}))
+        shoppinglist.push(Object.assign({ id: s.key, ...s.val() }));
       });
-      setItems(shoppinglist)
+      setItems(shoppinglist);
     });
   }, []);
 
@@ -52,28 +52,50 @@ export default function App() {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
+      <Header
+        backgroundColor="#FFC0CB"
+        centerComponent={{
+          text: "SHOPPING LIST",
+          style: { color: "#FFF", padding: 10 },
+        }}
+      />
+      <Input
         placeholder="Product"
+        label="PRODUCT"
         onChangeText={(product) => setProduct(product)}
         value={product}
       />
-      <TextInput
-        style={styles.input}
+      <Input
         placeholder="Amount"
+        label="AMOUNT"
         onChangeText={(amount) => setAmount(amount)}
         value={amount}
       />
-      <Button onPress={saveItem} title="Save" />
+      <Button
+        raised
+        icon={{ name: "save" }}
+        onPress={saveItem}
+        title="SAVE"
+        buttonStyle={{ backgroundColor: "#FFC0CB" }}
+      />
       <Text style={{ marginTop: 30, fontSize: 20 }}>Shopping List</Text>
       <FlatList
         data={items}
         renderItem={({ item }) => (
-          <View style={styles.listcontainer} key={item.id}>
-            <Text>{`${item.product}, ${item.amount}`}</Text>
-            <Button title="Delete" onPress={() => deleteItem(item.id)} />
-          </View>
+          <ListItem bottomDivider>
+            <ListItem.Content>
+              <ListItem.Title>${item.product}</ListItem.Title>
+              <ListItem.Subtitle>${item.amount}</ListItem.Subtitle>
+              <Icon
+                type="material"
+                reverseColor="red"
+                name="delete"
+                onPress={() => deleteItem(item.id)}
+              />
+            </ListItem.Content>
+          </ListItem>
         )}
+        keyExtractor={(item, index) => index.toString()}
       />
     </View>
   );
@@ -85,19 +107,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 200,
+    paddingTop: 50,
   },
   listcontainer: {
     flexDirection: "row",
     backgroundColor: "#fff",
     alignItems: "center",
   },
-  input: {
-    marginTop: 10,
-    padding: 20,
-    height: 20,
-    fontSize: 20,
-    borderColor: "black",
-    borderWidth: 1,
-  },
 });
+
